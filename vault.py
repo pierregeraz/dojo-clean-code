@@ -32,13 +32,52 @@ def handle_add_account(password_list, master_password):
     return new_password_list
 
 
+def handle_show_account(p_list):
+    a = prompt_account_name()
+    b = None
+    for i in range(len(p_list)):
+        if p_list[i]["website_name"] == a:
+            b = [p_list[i]]
+    print_accounts(b)
+
+
+def prompt_account_name():
+    a = Prompt.ask("Enter website name").lower()
+    console.print("\n")
+    return a
+
+def delete_account_from_list(account_list, account_name):
+    for account in account_list:
+        new_account_list = []
+        if account["website_name"] != account_name:
+            new_account_list.append(account)
+        return new_account_list
+def handle_delete_account(account_list):
+    nbr_accounts = len(account_list)
+    website_to_delete = prompt_account_name()
+    new_account_list = delete_account_from_list(account_list, website_to_delete)
+    save_account_list(new_account_list, new_account_list["password"])
+
+
+
+
+    if len(account_list) == nbr_accounts:
+        console.print("No accounts were found matching this website name!")
+    else:
+        console.print("Account {} successfully deleted from vault".format(a))
+
+
+def handle_quit():
+    console.print("Quitting...")
+    quit()
+
 def load_account_list(password):
     """Load the account list from the encrypted vault"""
     ciphered_data = load_data_from_file("./ciphered_vault")
     return decrypt(ciphered_data, password)
 
 
-def write(password_list, password):
+def save_account_list(password_list, password):
     """Save the account list in the encrypted vault"""
     ciphered_list = encrypt(password_list, password)
     save_data_to_file("./ciphered_vault", ciphered_list)
@@ -82,6 +121,20 @@ def show_options():
     console.print(table, justify="center")
 
 
+def print_accounts(p_list):
+    table = Table(title="Options")
+
+    table.add_column("Account name", style="cyan")
+    table.add_column("User name", style="magenta")
+    table.add_column("Password", style="magenta")
+
+    # adding the rows
+    for i in range(len(p_list)):
+        table.add_row(p_list[i]["website_name"], p_list[i]["username"], p_list[i]["password"])
+
+    console.print(table, justify="center")
+
+
 def main():
     files = os.listdir()
     console.clear()
@@ -89,11 +142,11 @@ def main():
 
     # Account already exists
     if "ciphered_vault" in files:
-        pList, master_password = handle_login_existing_account()
+        p_list, master_password = handle_login_existing_account()
 
     # Account creation phase
     else:
-        pList, master_password = handle_register_new_account()
+        p_list, master_password = handle_register_new_account()
 
     while True:
         console.rule()
@@ -103,40 +156,17 @@ def main():
         option = Prompt.ask("What do you want to do ? ")
 
         if option == "1":
-            pList = handle_add_account(pList, master_password)
+            p_list = handle_add_account(p_list, master_password)
+
         elif option == "2":
-            a = Prompt.ask("Enter account website name").lower()
-            console.print("\n")
-
-            temp = 0
-            b = None
-            for i in range(len(pList)):
-                if pList[i]["website_name"] == a:
-                    b = pList[i]
-
-            console.print(b)
+            handle_show_account(p_list)
 
         elif option == "3":
-            l = len(pList)
-            a = Prompt.ask("Enter website name").lower()
-            console.print("\n")
-
-            temp1 = 0
-            for i in range(0, len(pList)):
-                if pList[i]["website_name"] == a:
-                    del pList[i]
-                    break
-
-            if len(pList) == l:
-                console.print("No accounts were found matching this website name!")
-            else:
-                console.print("Account {} successfully deleted from vault".format(a))
-
+            handle_delete_account(p_list)
         elif option == "4":
-            console.print("Quitting...")
-            quit()
+            handle_quit()
         elif option == "5":
-            console.print(pList)
+            print_accounts(p_list)
         elif option == "6":
             pass
         else:
